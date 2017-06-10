@@ -43,6 +43,48 @@ router.route('/products')
         });
     });
 
+router.route('/products/:product_id')
+    .get(function(req,res) {
+        console.log(req.params.product_id);
+        ProductModel.findById(req.params.product_id,function(err,product) {
+            if (err) {
+                res.send(err);
+            }
+            res.json(product);
+        });
+    })
+
+    .put(function(req,res) {
+        ProductModel.findById(req.params.product_id,function(err,product) {
+            if (err) {
+                res.send(err);
+            }
+            product.title = (req.body.title === undefined) ? product.title : req.body.title;
+            product.description = (req.body.description === undefined) ? product.description : req.body.description;
+            product.category = (req.body.category === undefined) ? product.category : req.body.category;
+            product.price.amount = (req.body.amount === undefined) ? product.price.amount : req.body.amount;
+            product.price.currency = (req.body.currency === undefined) ? product.price.currency : req.body.currency;
+
+            product.save(function(err,product) {
+                if (err) {
+                    res.send(err);
+                }
+                res.json(product);
+            });
+        });
+    })
+
+    .delete(function(req,res) {
+        ProductModel.remove({
+            _id: req.params.product_id
+        },function(err,product) {
+            if (err) {
+                res.send(err);
+            }
+            res.json({message: 'Successfully deleted'});
+        });
+    })
+
 var db = mongoose.connection;
 db.on('error',console.error.bind(console,'connection error: '));
 db.once('open',function() {
