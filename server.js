@@ -9,6 +9,40 @@ var bodyParser = require('body-parser');
 mongoose.connect('mongodb://localhost/marketplace');
 var ProductModel = require('./models/product');
 
+router.use(function(req,res,next) {
+    console.log('An api request is made');
+    next();
+});
+
+router.route('/products')
+    .post(function(req,res) {
+        console.log('Post request to products url');
+
+        var product = new ProductModel();
+
+        product.title = req.body.title;
+        product.description = req.body.description;
+        product.category = req.body.category;
+        product.price.amount = req.body.amount;
+        product.price.currency = req.body.currency;
+
+        product.save(function(err,product) {
+            if (err) {
+                res.send(err);
+            }
+            res.json(product);
+        });
+    })
+
+    .get(function(req,res) {
+        ProductModel.find(function(err,products) {
+            if (err) {
+                res.send(err);
+            }
+            res.json(products);
+        });
+    });
+
 var db = mongoose.connection;
 db.on('error',console.error.bind(console,'connection error: '));
 db.once('open',function() {
