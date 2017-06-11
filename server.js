@@ -178,7 +178,33 @@ router.route('/products/:product_id')
             }
             res.json({message: 'Successfully deleted'});
         });
-    })
+    });
+
+router.route('/products/buy')
+    .post(function(req,res) {
+        UserModel.findOne({fb_id: req.body.fb_id},function(err,user) {
+            if(err) {
+                res.send(err)
+            } else if(user) {
+                user.bought_products.push(req.body.product_id);
+                user.save((function(err,user) {
+                    if(err) {
+                        res.send(err);
+                    } else if(user) {
+                        ProductModel.findById(req.body.product_id,function(err,product) {
+                            product.buyers.push(user._id);
+                            product.save(function(err,product) {
+                                if(err) {
+                                    res.send(err)
+                                }
+                                res.json(product);
+                            });
+                        })
+                    }
+                }));
+            }
+        });
+    });
 
 var db = mongoose.connection;
 db.on('error',console.error.bind(console,'connection error: '));
