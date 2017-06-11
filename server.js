@@ -6,6 +6,11 @@ var router = express.Router();
 var morgan = require('morgan');
 var bodyParser = require('body-parser');
 
+app.use(morgan('dev'));
+app.use(bodyParser.urlencoded({extended: true}));
+app.use(bodyParser.json());
+app.use('/api',router);
+
 mongoose.connect('mongodb://localhost/marketplace');
 var ProductModel = require('./models/product');
 var UserModel = require('./models/user');
@@ -13,11 +18,12 @@ var UserModel = require('./models/user');
 router.use(function(req,res,next) {
     res.header("Access-Control-Allow-Origin","*");
     res.header("Access-Control-Allow-Headers","Origin, X-Requested-With, Content-Type, Accept");
+    res.header("Access-Control-Allow-Methods","*");
     console.log('An api request is made');
     next();
 });
 
-router.route('/getproductlistforuser')
+router.route('/products/getproductlistforuser')
     .post(function(req,res) {
         UserModel.findOne({fb_id: req.body.fb_id},function(err,user) {
             if (err) {
@@ -36,10 +42,26 @@ router.route('/getproductlistforuser')
         });
     })
 
+router.route('/products/sold')
+    .post(function(req,res) {
+        UserModel.findOne({fb_id: req.body.fb_id},function(err,user) {
+            if (err) {
+                res.send(err);
+            } else if(user) {
+                ProductModel.find({seller: user._id},function(err,products) {
+                    if (err) {
+                        res.send(err);
+                    }
+                    res.json(products);
+                });
+            }
+        });
+    })
+
 router.route('/users')
     .post(function(req,res) {
         console.log('Post request to users url');
-
+        console.log(req.body.fb_id);
         UserModel.findOne({fb_id: req.body.fb_id},function(err,user) {
             if(err) {
                 res.send(err);
@@ -47,6 +69,7 @@ router.route('/users')
             else if (user) {
                 res.json(user);
             } else {
+                console.log('New User');
                 var usr = new UserModel();
 
                 usr.first_name = req.body.first_name;
@@ -54,10 +77,12 @@ router.route('/users')
                 usr.email = (req.body.email === undefined) ? '' : req.body.email;
                 usr.fb_id = req.body.fb_id;
 
+                console.log(usr);
                 usr.save(function(err,usr) {
                     if (err) {
                         res.send(err);
                     }
+                    console.log(usr);
                     res.json(usr);
                 });
             }
@@ -151,7 +176,8 @@ router.route('/products/:product_id')
             });
     })
 
-    .put(function(req,res) {
+router.route('/products/:product_id/edit')
+    .post(function(req,res) {
         ProductModel.findById(req.params.product_id,function(err,product) {
             if (err) {
                 res.send(err);
@@ -171,7 +197,8 @@ router.route('/products/:product_id')
         });
     })
 
-    .delete(function(req,res) {
+router.route('/products/:product_id/delete')
+    .post(function(req,res) {
         ProductModel.remove({
             _id: req.params.product_id
         },function(err,product) {
@@ -180,7 +207,7 @@ router.route('/products/:product_id')
             }
             res.json({message: 'Successfully deleted'});
         });
-    });
+    })
 
 router.route('/products/buy')
     .post(function(req,res) {
@@ -250,9 +277,5 @@ router.get('/',function(req,res) {
     res.json({message: 'Welcome to the api'});
 });
 
-app.use(morgan('dev'));
-app.use(bodyParser.urlencoded({extended: true}));
-app.use(bodyParser.json());
-app.use('/api',router);
 app.listen(port);
 console.log('Server running on port '+port);
