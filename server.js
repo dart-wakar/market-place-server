@@ -15,6 +15,25 @@ router.use(function(req,res,next) {
     next();
 });
 
+router.route('/getproductlistforuser')
+    .post(function(req,res) {
+        UserModel.findOne({fb_id: req.body.fb_id},function(err,user) {
+            if (err) {
+                res.send(err);
+            } else if(user) {
+                ProductModel.find()
+                .where('seller')
+                .ne(user._id)
+                .exec(function(err,products) {
+                    if(err) {
+                        res.send(err);
+                    }
+                    res.json(products)
+                });
+            }
+        });
+    })
+
 router.route('/users')
     .post(function(req,res) {
         console.log('Post request to users url');
