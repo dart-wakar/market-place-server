@@ -9,7 +9,8 @@ var ProductSchema = new Schema({
         currency: String
     },
     date_added: {type: Date,default: Date.now},
-    category: String
+    category: String,
+    seller: {type: Schema.Types.ObjectId,ref: 'UserModel'}
 });
 
 module.exports = mongoose.model('ProductModel',ProductSchema);

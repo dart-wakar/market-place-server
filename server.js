@@ -52,7 +52,7 @@ router.route('/users')
         });
     });
 
-router.route('users/:user_id')
+router.route('/users/:user_id')
     .get(function(req,res) {
         UserModel.findById(req.params.user_id,function(err,user) {
             if (err) {
@@ -62,24 +62,42 @@ router.route('users/:user_id')
         });
     })
 
+    .delete(function(req,res) {
+        UserModel.remove({
+            _id: req.params.user_id
+        },function(err,user) {
+            if (err) {
+                res.send(err);
+            }
+            res.json(user);
+        });
+    });
+
 router.route('/products')
     .post(function(req,res) {
         console.log('Post request to products url');
 
-        var product = new ProductModel();
-
-        product.title = req.body.title;
-        product.description = req.body.description;
-        product.category = req.body.category;
-        product.price.amount = req.body.amount;
-        product.price.currency = req.body.currency;
-
-        product.save(function(err,product) {
+        UserModel.findOne({fb_id: req.body.fb_id},function(err,user) {
             if (err) {
                 res.send(err);
+            } else if(user){
+                var product = new ProductModel();
+
+                product.title = req.body.title;
+                product.description = req.body.description;
+                product.category = req.body.category;
+                product.price.amount = req.body.amount;
+                product.price.currency = req.body.currency;
+                product.seller = user._id;
+
+                product.save(function(err,product) {
+                    if (err) {
+                        res.send(err);
+                    }
+                    res.json(product);
+                });
             }
-            res.json(product);
-        });
+        })
     })
 
     .get(function(req,res) {
@@ -94,12 +112,14 @@ router.route('/products')
 router.route('/products/:product_id')
     .get(function(req,res) {
         console.log(req.params.product_id);
-        ProductModel.findById(req.params.product_id,function(err,product) {
-            if (err) {
-                res.send(err);
-            }
-            res.json(product);
-        });
+        ProductModel.findById(req.params.product_id)
+            .populate('seller')
+            .exec(function(err,product) {
+                    if (err) {
+                        res.send(err);
+                    }
+                    res.json(product);
+            });
     })
 
     .put(function(req,res) {
