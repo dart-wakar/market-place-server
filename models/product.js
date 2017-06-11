@@ -10,7 +10,8 @@ var ProductSchema = new Schema({
     },
     date_added: {type: Date,default: Date.now},
     category: String,
-    seller: {type: Schema.Types.ObjectId,ref: 'UserModel'}
+    seller: {type: Schema.Types.ObjectId,ref: 'UserModel'},
+    buyers: [{type: Schema.Types.ObjectId,ref: 'UserModel'}]
 });
 
 module.exports = mongoose.model('ProductModel',ProductSchema);

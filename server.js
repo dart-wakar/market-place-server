@@ -112,8 +112,16 @@ router.route('/products')
                 product.save(function(err,product) {
                     if (err) {
                         res.send(err);
+                    }else if(product) {
+                        console.log(user);
+                        user.sold_products.push(product._id)
+                        user.save(function(err,usr) {
+                            if(err) {
+                                res.send(err);
+                            }
+                            res.json(product)
+                        });
                     }
-                    res.json(product);
                 });
             }
         })
