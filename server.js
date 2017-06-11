@@ -8,11 +8,59 @@ var bodyParser = require('body-parser');
 
 mongoose.connect('mongodb://localhost/marketplace');
 var ProductModel = require('./models/product');
+var UserModel = require('./models/user');
 
 router.use(function(req,res,next) {
     console.log('An api request is made');
     next();
 });
+
+router.route('/users')
+    .post(function(req,res) {
+        console.log('Post request to users url');
+
+        UserModel.findOne({fb_id: req.body.fb_id},function(err,user) {
+            if(err) {
+                res.send(err);
+            }
+            else if (user) {
+                res.json(user);
+            } else {
+                var usr = new UserModel();
+
+                usr.first_name = req.body.first_name;
+                usr.last_name = req.body.last_name;
+                usr.email = (req.body.email === undefined) ? '' : req.body.email;
+                usr.fb_id = req.body.fb_id;
+
+                usr.save(function(err,usr) {
+                    if (err) {
+                        res.send(err);
+                    }
+                    res.json(usr);
+                });
+            }
+        });
+    })
+
+    .get(function(req,res) {
+        UserModel.find(function(err,users) {
+            if (err) {
+                res.send(err);
+            }
+            res.json(users);
+        });
+    });
+
+router.route('users/:user_id')
+    .get(function(req,res) {
+        UserModel.findById(req.params.user_id,function(err,user) {
+            if (err) {
+                res.send(err);
+            }
+            res.json(user);
+        });
+    })
 
 router.route('/products')
     .post(function(req,res) {
@@ -104,6 +152,23 @@ db.once('open',function() {
         if (err) return console.error(err+'ggwp');
         console.log(products);
     });
+    /*var user = new UserModel();
+    user.first_name = 'Rounak';
+    user.last_name = 'Baral';
+    user.fb_id = 'hdy71y81u9e91i0ei19ujidqi';
+    console.log(user.first_name);
+    user.save(function(err,user) {
+        if (err) return console.error(err+'ggwp');
+        console.log(user.first_name);
+    });*/
+    /*UserModel.find(function(err,users) {
+        if (err) return console.error(err+'ggwp');
+        console.log(users);
+    });*/
+    /*UserModel.findOne({fb_id: 'jcjanjsicji'},function(err,res) {
+        if (err) return console.error(err+'ggwp');
+        console.log(res);
+    })*/
 });
 
 router.get('/',function(req,res) {
