@@ -14,6 +14,7 @@ app.use('/api',router);
 mongoose.connect('mongodb://localhost/marketplace');
 var ProductModel = require('./models/product');
 var UserModel = require('./models/user');
+var PaymentModel = require('./models/payments');
 
 router.use(function(req,res,next) {
     res.header("Access-Control-Allow-Origin","*");
@@ -234,6 +235,48 @@ router.route('/products/buy')
             }
         });
     });
+
+router.route('/payments')
+    .post(function(req,res) {
+        console.log('Make new payment');
+
+        UserModel.findOne({fb_id: req.body.payee_fb_id},function(err,payee) {
+            if(err) {
+                res.send(err);
+            } else if(payee) {
+                UserModel.findOne({fb_id: req.body.recepient_fb_id},function(err,recepient) {
+                    if(err) {
+                        res.send(err);
+                    } else if(recepient) {
+                        var payment = new PaymentModel();
+
+                        payment.payee = payee._id;
+                        payment.recepient = recepient._id;
+                        payment.product = req.body.product_id;
+                        payment.payment_details.amount = req.body.amount;
+                        payment.payment_details.currency = req.body.currency;
+
+                        payment.save(function(err,payment) {
+                            if(err) {
+                                res.send(err);
+                            }
+                            res.json(payment);
+                        });
+                    }
+                });
+            }
+        });
+    })
+
+    .get(function(req,res) {
+        console.log('Getting all payments')
+        PaymentModel.find(function(err,payments) {
+            if(err) {
+                res.send(err);
+            }
+            res.json(payments);
+        });
+    })
 
 var db = mongoose.connection;
 db.on('error',console.error.bind(console,'connection error: '));
