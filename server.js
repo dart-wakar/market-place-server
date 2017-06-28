@@ -278,6 +278,23 @@ router.route('/payments')
         });
     })
 
+router.route('/payments/madebyuser')
+    .post(function(req,res) {
+        console.log('Payments made by the user');
+        UserModel.findOne({fb_id: req.body.payee_fb_id},function(err,payee){
+            if(err) {
+                res.send(err)
+            } else if(payee) {
+                PaymentModel.find({payee: payee._id},function(err,payments) {
+                    if(err) {
+                        res.send(err);
+                    }
+                    res.json(payments);
+                });
+            }
+        });
+    });
+
 var db = mongoose.connection;
 db.on('error',console.error.bind(console,'connection error: '));
 db.once('open',function() {
